@@ -8,7 +8,10 @@ from marshmallow import Schema, fields
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JSON_SORT_KEYS'] = True
 db = SQLAlchemy(app)
+api = Api(app)
+ns_movies = api.namespace("movies")
 
 
 class Movie(db.Model):
@@ -34,6 +37,45 @@ class Genre(db.Model):
     __tablename__ = 'genre'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
+
+
+class MovieSchema(Schema):
+    id = fields.Int(dump_only=True)
+    title = fields.Str()
+    description = fields.Str()
+    trailer = fields.Str()
+    year = fields.Int()
+    rating = fields.Float()
+    genre_id = fields.Int()
+    genre = fields.Str()
+    director_id = fields.Int()
+    director = fields.Str()
+
+
+movie_schema = MovieSchema()
+movies_schema = MovieSchema(many=True)
+
+@ns_movies.route("/")
+class MoviesView(Resource):
+    def get(self):
+        try:
+            movies = db.session.query(Movie).all()
+
+            result = movies_schema.dump(movies)
+            return result, 200
+        except Exception as e:
+            return str(e), 404
+
+
+@ns_movies.route("/<int:id>")
+class MovieView(Resource):
+    def get(self, id):
+        try:
+            movie = db.session.query(Movie).get(id)
+            result = movie_schema.dump(movie)
+            return result, 200
+        except Exception as e:
+            return str(e), 404
 
 
 
