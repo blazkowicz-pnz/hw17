@@ -68,16 +68,20 @@ class GenreSchema(Schema):
 @ns_movies.route("/")
 class MovieView(Resource):
     def get(self):
-        director_id = request.args.get("director_id")
-        genre_id = request.args.get("genre_id")
-        page = request.args.get("page")
+        director_id = request.args.get("director_id", type=int)
+        genre_id = request.args.get("genre_id", type= int)
+        page = request.args.get("page", type=int)
         movies = Movie.query
+
         try:
             if director_id:
                 movies = movies.filter(Movie.director_id == director_id)
             if genre_id:
                 movies = movies.filter(Movie.genre_id == genre_id)
-            movies = movies.all()
+            if page:
+                movies = db.session.query(Movie).limit(10).offset(page*10 - 10).all()
+            # movies = movies.all()
+
             return MovieSchema(many=True).dump(movies), 200
         except Exception as e:
             return str(e), 404
