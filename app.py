@@ -70,7 +70,7 @@ class MovieView(Resource):
     def get(self):
         director_id = request.args.get("director_id")
         genre_id = request.args.get("genre_id")
-        page = request.args.get("page")
+#         page = request.args.get("page")
         movies = Movie.query
         try:
             if director_id:
